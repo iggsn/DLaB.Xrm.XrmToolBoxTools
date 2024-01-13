@@ -11,6 +11,8 @@ namespace DLaB.ModelBuilderExtensions.OptionSet
     public class CustomizeCodeDomService : TypedServiceBase<ICustomizeCodeDomService>, ICustomizeCodeDomService
     {
         public bool AddOptionSetMetadataAttribute { get => DLaBSettings.AddOptionSetMetadataAttribute; set => DLaBSettings.AddOptionSetMetadataAttribute = value; }
+        public bool EmitEntityETC { get => Settings.EmitEntityETC; set => Settings.EmitEntityETC = value; }
+        public bool GenerateAllOptionSetLabelMetadata { get => DLaBSettings.GenerateAllOptionSetLabelMetadata; set => DLaBSettings.GenerateAllOptionSetLabelMetadata = value; }
 
         #region Constructors
 
@@ -31,7 +33,11 @@ namespace DLaB.ModelBuilderExtensions.OptionSet
             //Trace.TraceInformation("Entering ICustomizeCodeDomService.CustomizeCodeDom");
             //Trace.TraceInformation("Number of Namespaces generated: {0}", codeUnit.Namespaces.Count);
 
-            //RemoveNonOptionSetDefinitions(codeUnit);
+            if (!EmitEntityETC)
+            {
+                // Remove Connection record1objecttypecode Enums since they are Connection_Record1ObjectTypeCode and Connection_Record2ObjectTypeCode
+            }
+
             AddMetadataAttributes(codeUnit);
             SortOptionSets(codeUnit);
             //Trace.TraceInformation("Exiting ICustomizeCodeDomService.CustomizeCodeDom");
@@ -83,35 +89,46 @@ namespace DLaB.ModelBuilderExtensions.OptionSet
             for (var i = 0; i < type.Members.Count; i++)
             {
                 var value = type.Members[i] as CodeMemberField;
-                if (value != null 
-                    && value.InitExpression is CodePrimitiveExpression primitive 
-                    && primitive.Value is int intValue 
+                if (value?.InitExpression is CodePrimitiveExpression primitive
+                    && primitive.Value is int intValue
                     && metadataByValue.TryGetValue(intValue, out var metadata))
                 {
                     var attribute = new CodeAttributeDeclaration("OptionSetMetadataAttribute", 
                         new CodeAttributeArgument(new CodePrimitiveExpression(metadata.Label.GetLocalOrDefaultText())),
                         new CodeAttributeArgument(new CodePrimitiveExpression(orderIndexByValue[intValue]))
                     );
-                    var optionalArs = new Stack<string>(new []
+                    var optionalArs = new Stack<string>(new[]
                     {
                         metadata.Color,
                         metadata.Description.GetLocalOrDefaultText(),
                         metadata.ExternalValue
                     });
 
-                    while (optionalArs.Count > 0 && string.IsNullOrWhiteSpace(optionalArs.Peek()))
+                    if(!GenerateAllOptionSetLabelMetadata)
                     {
-                        optionalArs.Pop();
+                        // GenerateAllOptionSetLabelMetadata will require all optional parameters to be populated
+                        while (optionalArs.Count > 0 && string.IsNullOrWhiteSpace(optionalArs.Peek()))
+                        {
+                            optionalArs.Pop();
+                        }
                     }
-
+                    
                     if (optionalArs.Count > 0)
                     {
                         attribute.Arguments.AddRange(
                             optionalArs.Select(v => new CodeAttributeArgument(new CodePrimitiveExpression(v)))
-                                       .Reverse().ToArray()
+                                .Reverse().ToArray()
                         );
                     }
 
+                    if (GenerateAllOptionSetLabelMetadata)
+                    {
+                        foreach(var label in metadata.Label.LocalizedLabels)
+                        {
+                            attribute.Arguments.Add(new CodeAttributeArgument(new CodePrimitiveExpression(label.LanguageCode)));
+                            attribute.Arguments.Add(new CodeAttributeArgument(new CodePrimitiveExpression(label.Label)));
+                        }
+                    }
                     value.CustomAttributes.Add(attribute);
                 }
                 else
@@ -161,7 +178,7 @@ namespace DLaB.ModelBuilderExtensions.OptionSet
                 }
 
 
-                foreach (var optionSet in optionSets.OrderBy(s => s.Name))
+                foreach (var optionSet in optionSets.OrderByDescending(s => s.Name))
                 {
                     nameSpace.Types[indexQueue.Dequeue()] = optionSet;
                 }

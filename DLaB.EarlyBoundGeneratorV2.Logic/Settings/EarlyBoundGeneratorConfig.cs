@@ -1,5 +1,6 @@
-using Source.DLaB.Common;
-using Source.DLaB.Common.VersionControl;
+using DLaB.Common;
+using DLaB.Common.VersionControl;
+using DLaB.Log;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,7 +10,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Xml;
 using System.Xml.Serialization;
-using DLaB.Log;
 
 namespace DLaB.EarlyBoundGeneratorV2.Settings
 {
@@ -347,19 +347,25 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
 
                 Logger.AddDetail("Finished Updating Config to 2.2023.4.3 settings!");
                 Logger.AddDetail("Check out the update documentation!");
-                Logger.AddDetail("https://github.com/daryllabar/DLaB.Xrm.XrmToolBoxTools/wiki/Version-2.2023.4.3-Upgrade-To-PAC-ModelBuilder");
+                Logger.AddDetail("https://github.com/daryllabar/DLaB.Xrm.XrmToolBoxTools/wiki/EBG-%E2%80%90-Version-2.2023.4.3-Upgrade-To-PAC-ModelBuilder");
             }
 
             if (pocoVersion < new Version("2.2023.9.20"))
             {
 #pragma warning disable CS0618 // Type or member is obsolete
-                Logger.AddDetail("Updating config to 1.2023.9.21 settings.");
+                Logger.AddDetail("Updating config to 2.2023.9.21 settings.");
                 // Entity Type Codes are not handled by the Model Builder
                 if (pocoConfig.GenerateEntityTypeCode == true)
                 {
                     poco.EmitEntityETC = true;
                 }
 #pragma warning restore CS0618 // Type or member is obsolete
+            }
+            if (pocoVersion < new Version("2.2023.12.21"))
+            {
+                Logger.AddDetail("Updating config to 2.2023.12.21 settings.");
+                Logger.AddDetail(" - Setting AdjustCasingForEnumOptions to false.  Consider updating to true to increase readability of enum values.");
+                pocoConfig.AdjustCasingForEnumOptions = false;
             }
         }
 
@@ -647,6 +653,7 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
             properties.SetJsonPropertyIfPopulated(BuilderSettingsJsonNames.NamingService, NamingService);
             SetOutputFolderProperty(BuilderSettingsJsonNames.OptionSetsTypesFolder, OptionSetsTypesFolder, defaultSettings.OptionSetsTypesFolder);
             properties.SetJsonProperty(BuilderSettingsJsonNames.ServiceContextName, ServiceContextName);
+            properties.SetJsonProperty(BuilderSettingsJsonNames.SuppressGeneratedCodeAttribute, SuppressGeneratedCodeAttribute);
 
             return;
 

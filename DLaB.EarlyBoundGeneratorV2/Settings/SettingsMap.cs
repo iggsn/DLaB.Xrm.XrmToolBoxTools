@@ -1,16 +1,17 @@
+using DLaB.Common;
+using DLaB.XrmToolBoxCommon.Editors;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Drawing.Design;
-using DLaB.XrmToolBoxCommon.Editors;
-using CommonConfig = Source.DLaB.Common.Config;
-using Source.DLaB.Common;
 using XrmToolBox.Extensibility;
+using CommonConfig = DLaB.Common.Config;
 
 // ReSharper disable UnusedMember.Global
 namespace DLaB.EarlyBoundGeneratorV2.Settings
 {
+    [TypeConverter(typeof(FilterPropertyTypeConverter))]
     public partial class SettingsMap: IGetPluginControl<EarlyBoundGeneratorPlugin>
     {
         private const string StringEditorName = @"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";
@@ -97,7 +98,7 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
 
         [Category("2 - Entities")]
         [DisplayName("Entity Relative Output Path")]
-        [Description("This is realtive to the Path of the Settings File.  If \"Create One File Per Entity\" is enabled, this needs to be a file path that ends in \".cs\", else, this needs to be a path to a directory.")]
+        [Description("This is realtive to the Path of the Output Relative Directory (or if not populated, the Settings File).  If \"Create One File Per Entity\" is enabled, this needs to be a file path that ends in \".cs\", else, this needs to be a path to a directory.")]
         [Editor(typeof(PathEditor), typeof(UITypeEditor))]
         [DynamicRelativePathEditor(nameof(SettingsPath), nameof(CreateOneFilePerEntity), "C# files|*.cs", "cs", false)]
         public string EntityTypesFolder
@@ -110,14 +111,14 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
         [DisplayName("Entities Blacklist")]
         [Description("Contains Entities to not generate.")]
         [Editor(typeof(EntitiesHashEditor), typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public HashSet<string> EntitiesBlacklist { get; set; }
 
         [Category("2 - Entities")]
         [DisplayName("Entities Whitelist")]
         [Description("Contains only the Entities to generate.  If empty, all Entities will be included.")]
         [Editor(typeof(EntitiesHashEditor), typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         [CollectionCount("All Entities")]
         public HashSet<string> EntitiesWhitelist { get; set; }
 
@@ -125,21 +126,28 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
         [DisplayName("Attribute Capitalization Override")]
         [Description("Allows for the ability to specify the capitalization of an attribute on an entity.")]
         [Editor(typeof(SpecifyAttributesCaseEditor), typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public Dictionary<string, HashSet<string>> EntityAttributeSpecifiedNames { get; set; }
+
+        [Category("2 - Entities")]
+        [DisplayName("Entity Class Name Overrides")]
+        [Description("Allows for specifying a specific name or casing for an Entity class.  For example, if the business refers to an 'Account' as a 'Family', specifying a mapping from 'account' to 'Family' will result in the name of the C# class being 'Family', even though the logical name would still be 'account'.")]
+        [Editor(typeof(SpecifyEntityNameEditor), typeof(UITypeEditor))]
+        [TypeConverter(typeof(CollectionCountConverter))]
+        public Dictionary<string,string> EntityClassNameOverrides { get;set;}
 
         [Category("2 - Entities")]
         [DisplayName("Entities RegEx Blacklist")]
         [Description("RegEx used to exclude entities from being generated.  If the entity logical name matches the given regex, it will not be generated. (Reminder, a wild card is \".*\" in regex)")]
         [Editor(StringEditorName, typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public List<string> EntityRegExBlacklist { get; set; }
 
         [Category("2 - Entities")]
         [DisplayName("Entities Wildcard Whitelist")]
         [Description("Entity wildcard \"*\" to generate.  If the Entity matches the wildcard search value it will be included.")]
         [Editor(StringEditorName, typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public List<string> EntityWildcardWhitelist { get; set; }
 
         [Category("2 - Entities")]
@@ -206,15 +214,6 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
         }
 
         [Category("2 - Entities")]
-        [DisplayName("Generate Option Set Metadata Attribute")]
-        [Description("Generates an OptionSetMetadataAttribute class used to allow for storing of the metadata of OptionSetValues i.e. display order, name, description, etc.  Only used if Add Option Set Metadata Attribute is true.")]
-        public bool GenerateOptionSetMetadataAttribute
-        {
-            get => Config.ExtensionConfig.GenerateOptionSetMetadataAttribute;
-            set => Config.ExtensionConfig.GenerateOptionSetMetadataAttribute = value;
-        }
-
-        [Category("2 - Entities")]
         [DisplayName("Make All Fields Editable")]
         [Description("Defines that Entities should be created with all attributes as editable.  This may be confusing for some developers because attempts to update FullName on the contact will silently fail.")]
         public bool MakeAllFieldsEditable
@@ -236,7 +235,7 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
         [DisplayName("Property Enum Mapping")]
         [Description("Manually specifies an enum mapping for an OptionSetValue Property on an entity.\n\rThis is useful if you have multiple local options that really are the same value.  This then allows easier comparision since the enums don't have to be converted.")]
         [Editor(typeof(AttributesToEnumMapperEditor), typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public List<string> PropertyEnumMappings { get; set; }
 
         [Category("2 - Entities")]
@@ -290,7 +289,7 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
 
         [Category("1 - Global")]
         [DisplayName("Builder Settings Json Relative Path")]
-        [Description("This is relative to the Path of the Settings File.  This should end with the a \".json\" extension.")]
+        [Description("This is relative to the Path of the Output Relative Directory (or if not populated, the Settings File).  This should end with the a \".json\" extension.")]
         public string BuilderSettingsJsonRelativePath
         {
             get => Config.ExtensionConfig.BuilderSettingsJsonRelativePath;
@@ -319,7 +318,7 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
         [DisplayName("Camel Case Custom Words")]
         [Description("Custom words to add to the standard dictionary file.  Allows for more control of the camel case naming convention, without having to check the entire dictionary file in.")]
         [Editor(StringEditorName, typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public List<string> CamelCaseCustomWords { get; set; }
 
         [Category("1 - Global")]
@@ -359,14 +358,6 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
             set => Config.ExtensionConfig.FilePrefixText = value;
         }
 
-        [Category("1 - Global")]
-        [DisplayName("Generate \"Generated By\" Header")]
-        [Description("Allows for all generated objects being tagged with the code generation engine and version as a header comment.")]
-        public bool GenerateGeneratedCodeAttribute
-        {
-            get => Config.ExtensionConfig.GenerateGeneratedCodeAttribute;
-            set => Config.ExtensionConfig.GenerateGeneratedCodeAttribute = value;
-        }
 
         [Category("1 - Global")]
         [DisplayName("Generate Types As Internal")]
@@ -379,7 +370,7 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
 
         [Category("1 - Global")]
         [DisplayName("Suppress Generated Code Attribute")]
-        [Description("Suppress all generated objects being tagged with the code generation engine and version.")]
+        [Description("Suppress all generated objects being tagged with Genereated code Attribute, containing the code generation engine and version.")]
         public bool SuppressGeneratedCodeAttribute
         {
             get => Config.SuppressGeneratedCodeAttribute;
@@ -405,6 +396,17 @@ namespace DLaB.EarlyBoundGeneratorV2.Settings
         }
 
         [Category("1 - Global")]
+        [DisplayName("Output Relative Directory")]
+        [Description("By default, this is the directory of the Settings file.  But if populated, this directory will be used instead, and all other paths will be relative to this one.")]
+        [Editor(typeof(PathEditor), typeof(UITypeEditor))]
+        [DynamicRelativePathEditor(nameof(SettingsPath), true, checkFileExists: false)]
+        public string OutputRelativeDirectory
+        {
+            get => Config.ExtensionConfig.OutputRelativeDirectory;
+            set => Config.ExtensionConfig.OutputRelativeDirectory = value;
+        }
+
+        [Category("1 - Global")]
         [DisplayName("Project Name For Early Bound Files")]
         [Description("(Optional) Defines the actual project name to search for when searching for a project file. If no value is provided, the first project file found will be used.")]
         public string ProjectNameForEarlyBoundFiles
@@ -424,10 +426,19 @@ This helps to alleviate unnecessary differences that pop up when the classes are
         }
 
         [Category("1 - Global")]
+        [DisplayName("Suppress Autogenerated File Header Comment")]
+        [Description("Prevents generation of the <auto-generated> header comments.")]
+        public bool SuppressAutogeneratedFileHeaderComment
+        {
+            get => Config.ExtensionConfig.SuppressAutogeneratedFileHeaderComment;
+            set => Config.ExtensionConfig.SuppressAutogeneratedFileHeaderComment = value;
+        }
+
+        [Category("1 - Global")]
         [DisplayName("Token Capitalization Overrides")]
         [Description("Used in conjunction with Camel Case Class Names and Camel Case Member Names to override any defaults.")]
         [Editor(StringEditorName, typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public List<string> TokenCapitalizationOverrides { get; set; }
 
         [Category("1 - Global")]
@@ -455,7 +466,7 @@ This helps to alleviate unnecessary differences that pop up when the classes are
 
         [Category("4 - Messages")]
         [DisplayName("Message Relative Output Path")]
-        [Description("This is realtive to the Path of the Settings File.  If \"Create One File Per Message\" is enabled, this needs to be a file path that ends in \".cs\", else, this needs to be a path to a directory.")]
+        [Description("This is realtive to the Path of the Output Relative Directory (or if not populated, the Settings File).  If \"Create One File Per Message\" is enabled, this needs to be a file path that ends in \".cs\", else, this needs to be a path to a directory.")]
         [Editor(typeof(PathEditor), typeof(UITypeEditor))]
         [DynamicRelativePathEditor(nameof(SettingsPath), nameof(CreateOneFilePerMessage), "C# files|*.cs", "cs", false)]
         public string MessageTypesFolder
@@ -468,21 +479,22 @@ This helps to alleviate unnecessary differences that pop up when the classes are
         [DisplayName("Message Wildcard Whitelist")]
         [Description("Message wildcard \"*\" to generate.  If the Message matches the wildcard search value it will be included.")]
         [Editor(StringEditorName, typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public List<string> MessageWildcardWhitelist { get; set; }
 
         [Category("4 - Messages")]
         [DisplayName("Messages Whitelist")]
         [Description("Allows for the ability to specify Messages that will be included in generation.  \"*\" wildcards are valid. ")]
         [Editor(typeof(ActionsHashEditor), typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
+        [CollectionCount("All Messages")]
         public HashSet<string> MessageWhitelist { get; set; }
 
         [Category("4 - Messages")]
         [DisplayName("Messages Blacklist")]
         [Description("Allows for the ability to specify Messages to not generate.")]
         [Editor(typeof(ActionsHashEditor), typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public HashSet<string> MessageBlacklist { get; set; }
 
         [Category("4 - Messages")]
@@ -550,11 +562,20 @@ This helps to alleviate unnecessary differences that pop up when the classes are
 
         [Category("3 - Option Sets")]
         [DisplayName("Add Option Set Metadata Attribute")]
-        [Description("Adds the OptionSetMetadataAttribute to enums to be able to access enum metadata.  Ensure Generate Option Set Metadata Attribute is true to generate the attribute definition, unless this has been handled in some other manner.")]
+        [Description("Adds the OptionSetMetadataAttribute to enums to be able to access enum metadata.  Ensure Generate Option Set Metadata Attribute Class is true to generate the attribute definition, unless this has been handled in some other manner.")]
         public bool AddOptionSetMetadataAttribute
         {
             get => Config.ExtensionConfig.AddOptionSetMetadataAttribute;
             set => Config.ExtensionConfig.AddOptionSetMetadataAttribute = value;
+        }
+
+        [Category("3 - Option Sets")]
+        [DisplayName("Adjust Casing For Enum Options")]
+        [Description("By default, the Dataverse Model Builder will convert the Option labels into a C# friendly name, and not adjust the casing of enum.  This could results in a Label of \"This is a very long label with some capitals (JSON / XML / CSV)\" being created as ThisisaverylonglabelwithsomecapitalsJSONXMLCSV, instead of a much more readable ThisIsAVeryLongLabelWithSomeCapitalsJsonXmlCsv,")]
+        public bool AdjustCasingForEnumOptions
+        {
+            get => Config.ExtensionConfig.AdjustCasingForEnumOptions;
+            set => Config.ExtensionConfig.AdjustCasingForEnumOptions = value;
         }
 
         [Category("3 - Option Sets")]
@@ -576,12 +597,30 @@ This helps to alleviate unnecessary differences that pop up when the classes are
         }
 
         [Category("3 - Option Sets")]
+        [DisplayName("Generate All Labels")]
+        [Description("Generates all labels by language code in the Option Set Metadata Attributes.  Only used if Add Option Set Metadata Attribute is true.")]
+        public bool GenerateAllOptionSetLabelMetadata
+        {
+            get => Config.ExtensionConfig.GenerateAllOptionSetLabelMetadata;
+            set => Config.ExtensionConfig.GenerateAllOptionSetLabelMetadata = value;
+        }
+
+        [Category("3 - Option Sets")]
         [DisplayName("Generate Global Option Sets")]
         [Description("Generate all Global OptionSets, note: if an entity contains a reference to a global optionset, it will be emitted even if this switch is not present.")]
         public bool GenerateGlobalOptionSets
         {
             get => Config.ExtensionConfig.GenerateGlobalOptionSets;
             set => Config.ExtensionConfig.GenerateGlobalOptionSets = value;
+        }
+
+        [Category("3 - Option Sets")]
+        [DisplayName("Generate Option Set Metadata Attribute Class")]
+        [Description("Generates an OptionSetMetadataAttribute class used to allow for storing of the metadata of OptionSetValues i.e. display order, name, description, etc.  Only used if Add Option Set Metadata Attribute is true.")]
+        public bool GenerateOptionSetMetadataAttribute
+        {
+            get => Config.ExtensionConfig.GenerateOptionSetMetadataAttribute;
+            set => Config.ExtensionConfig.GenerateOptionSetMetadataAttribute = value;
         }
 
         [Category("3 - Option Sets")]
@@ -613,7 +652,7 @@ This helps to alleviate unnecessary differences that pop up when the classes are
 
         [Category("3 - Option Sets")]
         [DisplayName("Option Set Output Relative Path")]
-        [Description("This is realtive to the Path of the Settings File.  If \"Create One File Per Option Set\" is enabled, this needs to be a file path that ends in \".cs\", else, this needs to be a path to a directory.")]
+        [Description("This is realtive to the Path of the Output Relative Directory (or if not populated, the Settings File).  If \"Create One File Per Option Set\" is enabled, this needs to be a file path that ends in \".cs\", else, this needs to be a path to a directory.")]
         [Editor(typeof(PathEditor), typeof(UITypeEditor))]
         [DynamicRelativePathEditor(nameof(SettingsPath), nameof(CreateOneFilePerOptionSet), "C# files|*.cs", "cs", false)]
         public string OptionSetsTypesFolder
@@ -653,7 +692,7 @@ This helps to alleviate unnecessary differences that pop up when the classes are
         [DisplayName("Option Set Names")]
         [Description("If Option Sets have idential names to Entities, it will cause naming conflicts.  By default this is overcome by postfixing \"_Enum\" to the Option Set name.  This setting allows a custom mapping for option set names to be specified.")]
         [Editor(typeof(DictionaryEditor), typeof(UITypeEditor))]
-        [TypeConverter(CollectionCountConverter.Name)]
+        [TypeConverter(typeof(CollectionCountConverter))]
         public Dictionary<string, string> OptionSetNames { get; set; }
 
         #endregion Option Sets
@@ -754,7 +793,7 @@ This helps to alleviate unnecessary differences that pop up when the classes are
             {
                 propertyToParse = propertyName;
                 propertyValue = value;
-                return value?.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                return value?.Replace(" ", string.Empty).Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
             }
 
             try
@@ -765,6 +804,7 @@ This helps to alleviate unnecessary differences that pop up when the classes are
                 EntitiesBlacklist = RemoveWhiteSpace(nameof(EntitiesBlacklist), config.ExtensionConfig.EntitiesToSkip).GetHashSet<string>();
                 EntitiesWhitelist = RemoveWhiteSpace(nameof(EntitiesWhitelist), config.ExtensionConfig.EntitiesWhitelist).GetHashSet<string>();
                 EntityAttributeSpecifiedNames = RemoveWhiteSpace(nameof(EntityAttributeSpecifiedNames), config.ExtensionConfig.EntityAttributeSpecifiedNames).GetDictionaryHash<string, string>();
+                EntityClassNameOverrides = RemoveWhiteSpace(nameof(EntityClassNameOverrides), config.ExtensionConfig.EntityClassNameOverrides).GetDictionary<string, string>();
                 EntityRegExBlacklist = RemoveWhiteSpace(nameof(EntityRegExBlacklist), config.ExtensionConfig.EntityPrefixesToSkip).GetList<string>();
                 EntityWildcardWhitelist = RemoveWhiteSpace(nameof(EntityWildcardWhitelist), config.ExtensionConfig.EntityPrefixesWhitelist).GetList<string>();
                 MessageBlacklist = RemoveWhiteSpace(nameof(MessageBlacklist), config.ExtensionConfig.ActionsToSkip).GetHashSet<string>(info);
@@ -797,6 +837,7 @@ This helps to alleviate unnecessary differences that pop up when the classes are
             Config.ExtensionConfig.EntitiesToSkip = CommonConfig.ToStringSorted(EntitiesBlacklist);
             Config.ExtensionConfig.EntitiesWhitelist = CommonConfig.ToStringSorted(EntitiesWhitelist);
             Config.ExtensionConfig.EntityAttributeSpecifiedNames = CommonConfig.ToStringSorted(EntityAttributeSpecifiedNames);
+            Config.ExtensionConfig.EntityClassNameOverrides = CommonConfig.ToStringSorted(EntityClassNameOverrides);
             Config.ExtensionConfig.EntityPrefixesToSkip = CommonConfig.ToStringSorted(EntityRegExBlacklist);
             Config.ExtensionConfig.EntityPrefixesWhitelist = CommonConfig.ToStringSorted(EntityWildcardWhitelist);
             Config.ExtensionConfig.PropertyEnumMappings = CommonConfig.ToStringSorted(PropertyEnumMappings);

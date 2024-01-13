@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>DLaB.Xrm.AttributeManager</id>
-	<version>1.2022.9.23</version>
+	<version>1.2023.12.21</version>
 	<title>Attribute Manager</title>
     <authors>Daryl LaBar</authors>
     <owners>Daryl LaBar</owners>
@@ -11,17 +11,24 @@
     <icon>images\DLaB_Dynamics_Logo_Square_32x32.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>BETA! - Used to rename/delete/or change the type of an attribute.</description>
-    <releaseNotes>V1.2022.9.23
-- Fix for Single line of text temp attribute length isn't long enough. #249  Thanks Kirill Kanyukov!
-    </releaseNotes>
+    <releaseNotes>V1.2023.12.21
+Potential Conflict with Early Bound Generator V2
+
+V1.2023.12.7
+Implement Retry Logic #463
+Fix for Fails to update Plugin Step Image #462		
+Fix for Null Exception error when replacing an attribute #454
+Fix for Migrate Data fails when changing schema name of attribute with a relationship #329
+		</releaseNotes>
     <copyright>Copyright 2018</copyright>
     <tags>XrmToolBox Plugins Xrm</tags>
     <dependencies>
-      <dependency id="XrmToolBox" version="1.2017.2.13" />
+	    <dependency id="XrmToolBox" version="1.2023.12.68" />
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\MscrmTools\XrmToolBox\Plugins\DLaB.AttributeManager.dll" target="lib\net462\plugins" />
     <file src="bin\Release\Images\DLaB_Dynamics_Logo_Square_32x32.png" target="images\" />
-  </files>
+    <file src="bin\Release\DLaB.AttributeManager.dll"                  target="lib\net48\plugins" />
+    <file src="bin\Release\DLaB.AttributeManager\*.*"                  target="lib\net48\plugins\DLaB.AttributeManager" exclude="bin\Release\DLaB.AttributeManager.dll" />
+	</files>
 </package>

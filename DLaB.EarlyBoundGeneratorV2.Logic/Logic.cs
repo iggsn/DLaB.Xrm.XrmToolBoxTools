@@ -1,15 +1,14 @@
+using DLaB.EarlyBoundGeneratorV2.Settings;
 using DLaB.Log;
+using DLaB.ModelBuilderExtensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.ModelBuilderLib;
 using Microsoft.Xrm.Sdk;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Speech.Synthesis;
 using System.Text.Json;
-using DLaB.EarlyBoundGeneratorV2.Settings;
-using DLaB.ModelBuilderExtensions;
-using Microsoft.Extensions.Logging;
 
 namespace DLaB.EarlyBoundGeneratorV2
 {
@@ -20,35 +19,6 @@ namespace DLaB.EarlyBoundGeneratorV2
     {
         private readonly object _speakToken = new object();
         private EarlyBoundGeneratorConfig EarlyBoundGeneratorConfig { get; }
-        // ReSharper disable StringLiteralTypo
-        private static readonly HashSet<string> ModelBuilderSwitches = new HashSet<string>(new[]
-        {
-            "emitfieldsclasses",
-            "generateActions",
-            "generateGlobalOptionSets",
-            "emitfieldsclasses",
-            "interactivelogin",
-            "help",
-            "legacyMode",
-            "nologo",
-            "splitfiles",
-            "suppressGeneratedCodeAttribute",
-            "suppressINotifyPattern",
-            "writesettingsTemplateFile"
-        });
-
-        private static readonly HashSet<string> ModelBuilderParametersToSkip = new HashSet<string>(new[]
-        {
-            // Parameters that are in the template file
-            "emitEntityETC",
-            "emitVirtualAttributes",
-            "entitytypesfolder",
-            "generatesdkmessages",
-            "language",
-            "messagestypesfolder",
-            "optionsetstypesfolder"
-        }); 
-        // ReSharper restore StringLiteralTypo
 
         /// <summary>
         /// Initializes a new Logic class.
@@ -70,8 +40,8 @@ namespace DLaB.EarlyBoundGeneratorV2
             Console.SetOut(logger);
             try
             {
-                var parameters = GetParameters();
-                var firstFile = Directory.GetFiles(parameters.OutDirectory).FirstOrDefault();
+                var parameterBuilder = new ArgumentBuilder(EarlyBoundGeneratorConfig.SettingsTemplatePath, EarlyBoundGeneratorConfig.RootPath, Logger.AddDetail);
+                var firstFile = Directory.GetFiles(parameterBuilder.OutputPath).FirstOrDefault();
                 if (!string.IsNullOrWhiteSpace(firstFile) && !AbleToMakeFileAccessible(firstFile))
                 {
                     return false;
@@ -88,7 +58,7 @@ namespace DLaB.EarlyBoundGeneratorV2
                     Logger.Instance.LogLevel = (LogLevel)logLevel;
                 }
                 var runner = new ModelBuilder(Logger.Instance);
-                runner.Parameters.LoadArguments(GetParameters(parameters));
+                runner.Parameters.LoadArguments(parameterBuilder.GetArguments());
                 var result = runner.Invoke(service);
                 if (result == 0)
                 {
@@ -117,55 +87,9 @@ namespace DLaB.EarlyBoundGeneratorV2
             }
         }
 
-        private ModelBuilderInvokeParameters GetParameters()
-        {
-            return new ModelBuilderInvokeParameters(new ModeBuilderLoggerService("DateModelBuilderTests"))
-            {
-                SettingsTemplateFile = EarlyBoundGeneratorConfig.SettingsTemplatePath,
-                SplitFilesByObject = true,
-                OutDirectory = EarlyBoundGeneratorConfig.RootPath
-            };
-        }
-
-        public string[] GetParameters(ModelBuilderInvokeParameters parameters)
-        {
-            var lines = new List<string>();
-            var commandLine = new List<string>();
-            Logger.AddDetail("Generating ProcessModelInvoker Parameters:");
-            foreach (var kvp in parameters.ToDictionary().Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value)))
-            {
-                if (ModelBuilderParametersToSkip.Contains(kvp.Key))
-                {
-                    // skip...
-                }
-                else if (ModelBuilderSwitches.Contains(kvp.Key))
-                {
-                    if (bool.TryParse(kvp.Value, out var boolVal) && boolVal)
-                    {
-                        var flag = "--" + kvp.Key;
-                        commandLine.Add(flag);
-                        Logger.AddDetail(flag);
-                        lines.Add($"/{kvp.Key}");
-                    }
-                }
-                else
-                {
-                    var kvpParameter = $"--{kvp.Key} {kvp.Value}";
-                    commandLine.Add(kvpParameter);
-                    Logger.AddDetail(kvpParameter);
-                    lines.Add($"/{kvp.Key}:{kvp.Value}");
-                }
-            }
-
-            Logger.AddDetail("Finished Generating ProcessModelInvoker Parameters.");
-            var values = lines.OrderBy(v => v).ToArray();
-
-            Logger.AddDetail("Command line for Cloud generation:");
-            Logger.AddDetail($"PAC modelbuilder build {string.Join(" ", commandLine.Where(v => !v.Contains("splitfiles")))}");
-
-            return values;
-        }
-
+        /// <summary>
+        /// Checks that this given path is valid and accessible
+        /// </summary>
         protected bool AbleToMakeFileAccessible(string filePath)
         {
             var directory = Path.GetDirectoryName(filePath);
@@ -197,7 +121,6 @@ namespace DLaB.EarlyBoundGeneratorV2
             return false;
         }
 
-
         public void UpdateBuilderSettingsJson()
         {
             UpdateBuilderSettingsJson(EarlyBoundGeneratorConfig, true);
@@ -205,7 +128,7 @@ namespace DLaB.EarlyBoundGeneratorV2
 
         private static void UpdateBuilderSettingsJson(EarlyBoundGeneratorConfig earlyBoundGeneratorConfig, bool allowRetry)
         {
-            var path = GetJsonConfigPath(earlyBoundGeneratorConfig);
+            var path = earlyBoundGeneratorConfig.SettingsTemplatePath;
 
             if (!Directory.Exists(Path.GetDirectoryName(path)))
             {
@@ -272,20 +195,12 @@ namespace DLaB.EarlyBoundGeneratorV2
             }
         }
 
-        private static string GetJsonConfigPath(EarlyBoundGeneratorConfig earlyBoundGeneratorConfig)
-        {
-            var path = Path.IsPathRooted(earlyBoundGeneratorConfig.ExtensionConfig.BuilderSettingsJsonRelativePath)
-                ? earlyBoundGeneratorConfig.ExtensionConfig.BuilderSettingsJsonRelativePath
-                : Path.Combine(earlyBoundGeneratorConfig.RootPath, earlyBoundGeneratorConfig.ExtensionConfig.BuilderSettingsJsonRelativePath);
-            return path;
-        }
-
         /// <summary>
         /// The Extensions to the Pac Model Builder will live in a different assembly.  To ensure that users can run against the PAC commandline, reset the namespace to the PAC version
         /// </summary>
         public void RemoveXrmToolBoxPluginPath()
         {
-            var path = GetJsonConfigPath(EarlyBoundGeneratorConfig);
+            var path = EarlyBoundGeneratorConfig.SettingsTemplatePath;
 
             var contents = File.ReadAllLines(path);
 
@@ -294,6 +209,10 @@ namespace DLaB.EarlyBoundGeneratorV2
 
         private void Speak(string words)
         {
+            if (!EarlyBoundGeneratorConfig.AudibleCompletionNotification)
+            {
+                return;
+            }
             var speaker = new SpeechSynthesizer();
             lock (_speakToken)
             {

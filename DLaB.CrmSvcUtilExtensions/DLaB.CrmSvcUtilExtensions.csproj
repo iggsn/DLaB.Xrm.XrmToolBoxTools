@@ -41,11 +41,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\coretools\CrmSvcUtil.exe</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.6.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.7.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Crm.Sdk.Proxy, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.50\lib\net462\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.42\lib\net462\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.IdentityModel, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -60,10 +60,10 @@
       <HintPath>..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.3.19.8\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Rest.ClientRuntime, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.CoreAssembly.9.1.1.41\lib\net462\Microsoft.Rest.ClientRuntime.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.CoreAssembly.9.1.0.110\lib\net462\Microsoft.Rest.ClientRuntime.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Xrm.Sdk, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.50\lib\net462\Microsoft.Xrm.Sdk.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.42\lib\net462\Microsoft.Xrm.Sdk.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Xrm.Sdk.Deployment, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -71,25 +71,26 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Xrm.Sdk.Workflow, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.Workflow.9.0.2.50\lib\net462\Microsoft.Xrm.Sdk.Workflow.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CrmSdk.Workflow.9.0.2.51\lib\net462\Microsoft.Xrm.Sdk.Workflow.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Xrm.Tooling.Connector, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.CoreAssembly.9.1.1.41\lib\net462\Microsoft.Xrm.Tooling.Connector.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.CoreAssembly.9.1.0.110\lib\net462\Microsoft.Xrm.Tooling.Connector.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Xrm.Tooling.CrmConnectControl, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.1.41\lib\net462\Microsoft.Xrm.Tooling.CrmConnectControl.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.0.110\lib\net462\Microsoft.Xrm.Tooling.CrmConnectControl.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Xrm.Tooling.Ui.Styles, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.1.41\lib\net462\Microsoft.Xrm.Tooling.Ui.Styles.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.0.110\lib\net462\Microsoft.Xrm.Tooling.Ui.Styles.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Xrm.Tooling.WebResourceUtility, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.1.41\lib\net462\Microsoft.Xrm.Tooling.WebResourceUtility.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.0.110\lib\net462\Microsoft.Xrm.Tooling.WebResourceUtility.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -114,8 +115,8 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Net" />
     <Reference Include="System.Net.Http" />
@@ -143,11 +144,11 @@
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Text.Encodings.Web, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.Encodings.Web.6.0.0\lib\net461\System.Text.Encodings.Web.dll</HintPath>
+    <Reference Include="System.Text.Encodings.Web, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.7.0.0\lib\net462\System.Text.Encodings.Web.dll</HintPath>
     </Reference>
-    <Reference Include="System.Text.Json, Version=6.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.Json.6.0.7\lib\net461\System.Text.Json.dll</HintPath>
+    <Reference Include="System.Text.Json, Version=7.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.7.0.1\lib\net462\System.Text.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
@@ -177,23 +178,23 @@
     <Compile Include="Action\CodeWriterFilterService.cs" />
     <Compile Include="Action\CustomizeCodeDomService.cs" />
     <Compile Include="Action\CustomCodeGenerationService.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\Config.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\ConfigKeyValueSplitInfo.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\ConfigKeyValuesSplitInfo.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\ConfigProvider.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\ConfigValuesSplitInfo.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\DLaBConfig.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\Exceptions\DictionaryDuplicateKeyException.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\Exceptions\EnumCaseUndefinedException.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\Exceptions\TypeArgumentException.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\Extensions.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\ProcessExecutor.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\ProcessExecutorInfo.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\TypeSafeEnumBase.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\VersionControl\ISourceControlProvider.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\VersionControl\NoSourceControlProvider.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\VersionControl\SourceControl.cs" />
-    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.5\VersionControl\VsTfsSourceControlProvider.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\Config.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\ConfigKeyValueSplitInfo.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\ConfigKeyValuesSplitInfo.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\ConfigProvider.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\ConfigValuesSplitInfo.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\DLaBConfig.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\Exceptions\DictionaryDuplicateKeyException.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\Exceptions\EnumCaseUndefinedException.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\Exceptions\TypeArgumentException.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\Extensions.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\ProcessExecutor.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\ProcessExecutorInfo.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\TypeSafeEnumBase.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\VersionControl\ISourceControlProvider.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\VersionControl\NoSourceControlProvider.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\VersionControl\SourceControl.cs" />
+    <Compile Include="App_Packages\DLaB.Common.Source.1.4.0.7\VersionControl\VsTfsSourceControlProvider.cs" />
     <Compile Include="AttributeConstGeneratorBase.cs" />
     <Compile Include="BaseCustomCodeGenerationService.cs" />
     <Compile Include="CamelCaser.cs" />
@@ -254,6 +255,7 @@
     <None Include="bin\Debug\DLaB.CrmSvcUtilExtensions.dll.config" />
     <None Include="bin\Release\CrmSvcUtil.exe.config" />
     <None Include="bin\Release\DLaB.CrmSvcUtilExtensions.dll.config" />
+    <None Include="CrmSvcUtil.exe.config" />
     <None Include="OptionSet\Transliteration\Alphabets\1031.json" />
     <None Include="OptionSet\Transliteration\Alphabets\1036.json" />
     <None Include="OptionSet\Transliteration\Alphabets\1040.json" />
@@ -1090,8 +1092,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>xcopy /I /Y "$(ProjectDir)CrmSvcUtil.exe.config" "$(TargetDir)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>REM Copy New Content Files
@@ -1103,7 +1104,7 @@ if $(ConfigurationName) == Release "$(SolutionDir)References\SetAssemblyVersion.
 
 xcopy /I /Y "$(SolutionDir)packages\Microsoft.CrmSdk.CoreTools.9.1.0.92\content\bin\coretools\*.dll" "$(TargetDir)"
 xcopy /I /Y "$(SolutionDir)packages\Microsoft.CrmSdk.CoreTools.9.1.0.92\content\bin\coretools\CrmSvcUtil.exe" "$(TargetDir)"
-xcopy /I /Y "$(SolutionDir)packages\Microsoft.CrmSdk.CoreTools.9.1.0.92\content\bin\coretools\CrmSvcUtil.exe.config" "$(TargetDir)"
+REM OLD VERSION xcopy /I /Y "$(SolutionDir)packages\Microsoft.CrmSdk.CoreTools.9.1.0.92\content\bin\coretools\CrmSvcUtil.exe.config" "$(TargetDir)"
 
 </PreBuildEvent>
   </PropertyGroup>

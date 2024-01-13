@@ -1,22 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Media;
-using System.Reflection;
-using System.Windows.Forms;
-using DLaB.EarlyBoundGeneratorV2.Settings;
+﻿using DLaB.EarlyBoundGeneratorV2.Settings;
 using DLaB.Log;
 using DLaB.XrmToolBoxCommon;
 using DLaB.XrmToolBoxCommon.AppInsightsHelper;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.IO;
+using System.Linq;
+using System.Media;
+using System.Windows.Forms;
+using DLaB.ModelBuilderExtensions;
 using XrmToolBox;
 using XrmToolBox.Extensibility;
 using XrmToolBox.Extensibility.Interfaces;
 using PropertyInterface = DLaB.XrmToolBoxCommon.PropertyInterface;
+using DLaB.XrmToolBoxCommon.Controls;
 
 namespace DLaB.EarlyBoundGeneratorV2
 {
@@ -54,6 +54,7 @@ namespace DLaB.EarlyBoundGeneratorV2
         {
             FormLoaded = false;
             InitializeComponent();
+            PropertiesGrid.FilterableGrid.PropertyValueChanged += PropertiesGrid_PropertyValueChanged;
         }
 
         private void EarlyBoundGenerator_Load(object sender, EventArgs e)
@@ -105,7 +106,12 @@ namespace DLaB.EarlyBoundGeneratorV2
         {
             Settings = config;
             Settings.ExtensionConfig.XrmToolBoxPluginPath = Paths.PluginsPath;
-            SettingsMap = new SettingsMap(this, Settings) { SettingsPath = settingsPath };
+            SettingsMap = new SettingsMap(this, Settings)
+            {
+                SettingsPath = string.IsNullOrWhiteSpace(Settings.ExtensionConfig.OutputRelativeDirectory) 
+                    ? settingsPath 
+                    : Settings.ExtensionConfig.OutputRelativeDirectory
+            };
             PropertiesGrid.SelectedObject = SettingsMap;
             HideUnusedCategories();
             SkipSaveSettings = false;
@@ -131,7 +137,7 @@ Please consider clicking the save button in the top right to save the settings w
 
         private void HideUnusedCategories()
         {
-            foreach (var category in PropertiesGrid.GetAllGridItems()
+            foreach (var category in PropertiesGrid.FilterableGrid.GetAllGridItems()
                          .Where(i => i.Label != null
                                      && i.GridItemType == GridItemType.Category 
                                      && i.Label[0] > '4'))
@@ -217,9 +223,17 @@ Please consider clicking the save button in the top right to save the settings w
             EnableForm(false);
 
             HydrateSettingsFromUI();
-            if (new Version(Settings.Version) < new Version(Settings.SettingsVersion))
+            var ebgVersion = new Version(Settings.Version);
+            var settingsVersion = new Version(Settings.SettingsVersion);
+            if (settingsVersion.Major > ebgVersion.Major)
             {
-                if(MessageBox.Show($@"This version of the Early Bound Generator ({Settings.Version}) is older than the previous ran version from the settings ({Settings.SettingsVersion}).  You should probably update the plugin before running.  Are you sure you want to continue?", @"Older Version detected", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation) != DialogResult.Yes)
+                MessageBox.Show($@"This version of the Early Bound Generator ({Settings.Version}) is not compatible with the previous ran version from the settings ({Settings.SettingsVersion}).  Please Update to the matching version of the tool before running again.", @"Newer Major Settings Version Detected!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                EnableForm(true);
+                return; 
+            }
+            if (ebgVersion < settingsVersion)
+            {
+                if(MessageBox.Show($@"This version of the Early Bound Generator ({Settings.Version}) is older than the previous ran version from the settings ({Settings.SettingsVersion}).  You should probably update the plugin before running.  Are you sure you want to continue?", @"Older Version detected!", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation) != DialogResult.Yes)
                 {
                     EnableForm(true);
                     return;
@@ -291,7 +305,10 @@ Please consider clicking the save button in the top right to save the settings w
             }
 
             SettingsMap.PushChanges();
-            Settings.RootPath = Path.GetDirectoryName(Path.GetFullPath(TxtSettingsPath.Text));
+            var settingsDirectory = Path.GetDirectoryName(Path.GetFullPath(TxtSettingsPath.Text));
+            Settings.RootPath = string.IsNullOrWhiteSpace(SettingsMap.OutputRelativeDirectory)
+                ? settingsDirectory
+                : SettingsMap.OutputRelativeDirectory.RootPath(settingsDirectory); ;
 
             var defaultConfig = EarlyBoundGeneratorConfig.GetDefault();
             defaultConfig.ExtensionConfig.XrmToolBoxPluginPath = Paths.PluginsPath;

@@ -4,6 +4,7 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -13,11 +14,14 @@ namespace DLaB.ModelBuilderExtensions
     {
         public const int English = 1033;
 
+        public bool AdjustCasingForEnumOptions { get => DLaBSettings.AdjustCasingForEnumOptions; set => DLaBSettings.AdjustCasingForEnumOptions = value; }
         public bool CamelCaseClassNames { get => DLaBSettings.CamelCaseClassNames; set => DLaBSettings.CamelCaseClassNames = value; }
         public bool CamelCaseMemberNames { get => DLaBSettings.CamelCaseMemberNames; set => DLaBSettings.CamelCaseMemberNames = value; }
         public bool CamelCaseOptionSetNames { get => DLaBSettings.CamelCaseOptionSetNames; set => DLaBSettings.CamelCaseOptionSetNames = value; }
         public Dictionary<string, HashSet<string>> EntityAttributeSpecifiedNames { get => DLaBSettings.EntityAttributeSpecifiedNames; set => DLaBSettings.EntityAttributeSpecifiedNames = value; }
+        public Dictionary<string, string> EntityClassNameOverrides { get => DLaBSettings.EntityClassNameOverrides; set => DLaBSettings.EntityClassNameOverrides = value; }
         public string InvalidCSharpNamePrefix { get => DLaBSettings.InvalidCSharpNamePrefix; set => DLaBSettings.InvalidCSharpNamePrefix = value; }
+        public Dictionary<string, string> LabelTextReplacement { get => DLaBSettings.LabelTextReplacement; set => DLaBSettings.LabelTextReplacement = value; }
         public int LanguageCodeOverride { get => DLaBSettings.OptionSetLanguageCodeOverride; set => DLaBSettings.OptionSetLanguageCodeOverride = value; }
         public string LocalOptionSetFormat { get => DLaBSettings.LocalOptionSetFormat; set => DLaBSettings.LocalOptionSetFormat = value; }
         public Dictionary<string, string> OptionSetNames { get => DLaBSettings.OptionSetNames; set => DLaBSettings.OptionSetNames = value; }
@@ -26,8 +30,10 @@ namespace DLaB.ModelBuilderExtensions
         public bool UseLogicalNames { get => DLaBSettings.UseLogicalNames; set => DLaBSettings.UseLogicalNames = value; }
         public string ValidCSharpNameRegEx { get => DLaBSettings.ValidCSharpNameRegEx; set => DLaBSettings.ValidCSharpNameRegEx = value; }
 
+        private readonly int _languageCode;
         private HashSet<string> _entityNames;
         private readonly Dictionary<string,string> _generatedBpfLogicalNamesByClassName = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _generatedNames = new Dictionary<string, string>();
 
         private TransliterationService TransliterationService { get; set; }
 
@@ -41,14 +47,48 @@ namespace DLaB.ModelBuilderExtensions
         public NamingService(INamingService defaultService, IDictionary<string, string> parameters) : base(defaultService, parameters)
         {
             TransliterationService = new TransliterationService(DLaBSettings);
+            _languageCode = GetLanguageCode(defaultService);
         }
 
         public NamingService(INamingService defaultService, DLaBModelBuilderSettings settings = null) : base(defaultService, settings)
         {
             TransliterationService = new TransliterationService(DLaBSettings);
+            _languageCode = GetLanguageCode(defaultService);
         }
 
         #endregion Constructors   
+
+        /// <summary>
+        /// Used to determine the language code used by the default service, but allow for the override
+        /// </summary>
+        /// <param name="defaultService"></param>
+        /// <returns></returns>
+        private int GetLanguageCode(INamingService defaultService)
+        {
+            var languageCode = LanguageCodeOverride <= 0
+                ? English
+                : LanguageCodeOverride;
+            if (defaultService == null)
+            {
+                // Should only happen in testing.
+                return languageCode;
+            }
+            var parametersField = defaultService.GetType().GetField("_parameters", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (!(parametersField?.GetValue(defaultService) is ModelBuilderInvokeParameters modelParameters)) {
+                return languageCode;
+            }
+
+            if (LanguageCodeOverride > 0)
+            {
+                modelParameters.SystemDefaultLanguageId = LanguageCodeOverride;
+            }
+            else
+            {
+                languageCode = modelParameters.SystemDefaultLanguageId ?? languageCode;
+            }
+
+            return languageCode;
+        }
 
         public HashSet<string> GetEntityNames(IServiceProvider services)
         {
@@ -67,6 +107,11 @@ namespace DLaB.ModelBuilderExtensions
         /// </summary>
         public string GetNameForOptionSet(EntityMetadata entityMetadata, OptionSetMetadataBase optionSetMetadata, IServiceProvider services)
         {
+            var generatedKey = $"OptionSet:{entityMetadata?.LogicalName}|!|{optionSetMetadata?.Name}";
+            if (_generatedNames.TryGetValue(generatedKey, out var generatedName))
+            {
+                return generatedName;
+            }
             SetServiceCache(services);
             var name = GetPossiblyConflictedNameForOptionSet(entityMetadata, optionSetMetadata, services);
             var entityNames = GetEntityNames(services);
@@ -76,14 +121,21 @@ namespace DLaB.ModelBuilderExtensions
             }
 
             if(UseCrmSvcUtilStateEnumNamingConvention
-               && optionSetMetadata.IsGlobal != true
-               && name.ToLower().EndsWith("_statecode")
-               && entityMetadata.Attributes.FirstOrDefault(a => a.AttributeType == AttributeTypeCode.State) != null)
+                && optionSetMetadata.IsGlobal != true
+                && name.ToLower().EndsWith("_statecode")
+                && entityMetadata.Attributes.FirstOrDefault(a => a.AttributeType == AttributeTypeCode.State) != null)
             {
-                const int stateLength = 10;
-                name = name.Substring(0, name.Length - stateLength) + "State";
+                name = GetNameForEntity(entityMetadata, services) + "State";
             }
-            return OptionSetNames.TryGetValue(name.ToLower(), out var overriden) ? overriden : name;
+
+            if(OptionSetNames.TryGetValue(name.ToLower(), out var overriden))
+            {
+                _generatedNames[generatedKey] = overriden;
+                return overriden;
+            }
+
+            _generatedNames[generatedKey] = name;
+            return name;
         }
 
         private string GetPossiblyConflictedNameForOptionSet(EntityMetadata entityMetadata, OptionSetMetadataBase optionSetMetadata, IServiceProvider services)
@@ -124,7 +176,6 @@ namespace DLaB.ModelBuilderExtensions
                         GetNameForAttribute(entityMetadata, attribute, services, CamelCaseClassNames, UseLogicalNames));
                 }
             }
-
 
             return UpdateCasingForGlobalOptionSets(defaultName, optionSetMetadata);
         }
@@ -213,14 +264,14 @@ namespace DLaB.ModelBuilderExtensions
             return AppendValueForDuplicateOptionSetValueNames(optionSetMetadata, possiblyDuplicateName, optionMetadata.Value.GetValueOrDefault(), services);
         }
 
-        private string Transliterate(OptionMetadata optionMetadata, string englishName)
+        private string Transliterate(OptionMetadata optionMetadata, string defaultName)
         {
             var localizedLabels = optionMetadata.Label.LocalizedLabels;
-            if (LanguageCodeOverride < 0 || LanguageCodeOverride == optionMetadata.Label.LocalizedLabels.FirstOrDefault()?.LanguageCode)
+            if (LanguageCodeOverride <= 0)
             {
-                if (IsLabelPopulated(englishName))
+                if (IsLabelPopulated(defaultName))
                 {
-                    return englishName.RemoveDiacritics();
+                    return defaultName.RemoveDiacritics();
                 }
             }
             else
@@ -237,7 +288,7 @@ namespace DLaB.ModelBuilderExtensions
             var localizedLabel = localizedLabels.FirstOrDefault(x => TransliterationService.HasCode(x.LanguageCode) && IsLabelPopulated(x.Label));
 
             return localizedLabel == null ?
-                localizedLabels.FirstOrDefault(x => IsLabelPopulated(x.Label))?.Label?.RemoveDiacritics() ?? string.Empty : 
+                localizedLabels.FirstOrDefault(x => IsLabelPopulated(x.Label))?.Label?.RemoveDiacritics() ?? string.Empty :
                 TransliterationService.Transliterate(localizedLabel);
         }
 
@@ -252,13 +303,13 @@ namespace DLaB.ModelBuilderExtensions
         }
 
         /// <summary>
-        /// Checks to make sure that the name begins with a valid character. If the name does not begin with a valid character, then add an underscore to the beginning of the name.
+        /// Checks to make sure that the name begins with a valid character. If the name does not begin with a valid character, then add the InvalidCSharpNamePrefix to the beginning of the name.
         /// </summary>
         private string GetValidCSharpName(string name)
         {
             //remove spaces and special characters
             name = Regex.Replace(name, ValidCSharpNameRegEx, string.Empty);
-            if (name.Length > 0 && !char.IsLetter(name, 0))
+            if (name.Length > 0 && !char.IsLetter(name, 0) && name[0] != '_')
             {
                 name = InvalidCSharpNamePrefix + name;
             }
@@ -295,7 +346,7 @@ namespace DLaB.ModelBuilderExtensions
 
         private string GetPossiblyDuplicateNameForOption(OptionSetMetadataBase metadata, IServiceProvider services, OptionMetadata option)
         {
-            var defaultName = DefaultService.GetNameForOption(metadata, option, services);
+            var defaultName = GetDefaultNameForOptionWithLabelReplacements(metadata, services, option);
             defaultName = Transliterate(option, defaultName);
 
             var name = GetValidCSharpName(defaultName);
@@ -307,6 +358,113 @@ namespace DLaB.ModelBuilderExtensions
             return CamelCaseOptionSetNames
                 ? CamelCaser.Case(name)
                 : name;
+        }
+
+        private string GetDefaultNameForOptionWithLabelReplacements(OptionSetMetadataBase metadata, IServiceProvider services, OptionMetadata option)
+        {
+            var updatedLabels = new Dictionary<Guid, string>();
+            var labels = new List<LocalizedLabel>();
+            labels.AddRange(option.Label.LocalizedLabels);
+            labels.Add(option.Label.UserLocalizedLabel);
+            foreach (var replacement in LabelTextReplacement)
+            {
+                foreach (var label in labels.Where(l => l.Label.Contains(replacement.Key)))
+                {
+                    label.MetadataId = label.MetadataId ?? Guid.NewGuid();
+                    updatedLabels[label.MetadataId.Value] = label.Label;
+                    label.Label = label.Label.Replace(replacement.Key, replacement.Value);
+                }
+            }
+
+            var defaultName = AdjustCasingForEnumOptions
+                ? GetNameForOption_Hack(metadata, option, services)
+                : DefaultService.GetNameForOption(metadata, option, services);
+            foreach (var updatedLabel in updatedLabels)
+            {
+                foreach (var label in labels.Where(l => l.MetadataId == updatedLabel.Key)){
+                    label.Label = updatedLabel.Value;
+                }
+            }
+
+            return defaultName;
+        }
+
+        /// <summary>
+        /// Copied and tweaked from the Microsoft.PowerPlatform.Dataverse.ModelBuilderLib.NamingService
+        /// </summary>
+        /// <param name="optionSetMetadata"></param>
+        /// <param name="optionMetadata"></param>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        private string GetNameForOption_Hack(OptionSetMetadataBase optionSetMetadata, OptionMetadata optionMetadata, IServiceProvider services)
+        {
+            var generatedKey = $"Option:{optionSetMetadata?.Name}|!|{optionMetadata?.Value.GetValueOrDefault()}";
+            if (_generatedNames.TryGetValue(generatedKey, out var generatedName))
+            {
+                return generatedName;
+            }
+
+            string name = string.Empty;
+            StateOptionMetadata stateOption = optionMetadata as StateOptionMetadata;
+            if (stateOption != null)
+            {
+                name = stateOption.InvariantName;
+            }
+
+            if (string.IsNullOrEmpty(name)) // Name still null try this area. 
+            {
+                if (optionMetadata.Label != null &&
+                    optionMetadata.Label.LocalizedLabels.Any()) // Counter check for localization miss ( no 1033 label ) 
+                {
+                    // Need to add get for current system default language. 
+                    var lblToUse = optionMetadata.Label.LocalizedLabels.FirstOrDefault(f => f.LanguageCode == _languageCode)
+                                    ?? optionMetadata.Label.LocalizedLabels.FirstOrDefault(f => f.LanguageCode == English);
+                    if (lblToUse != null && !string.IsNullOrEmpty(lblToUse.Label))
+                        name = lblToUse.Label;
+                }
+
+                if (string.IsNullOrEmpty(name)
+                    && optionMetadata.Label.UserLocalizedLabel != null)
+                {
+                    name = optionMetadata.Label.UserLocalizedLabel.Label;
+                }
+
+                // Fail over check. 
+                if (string.IsNullOrEmpty(name) &&
+                    optionMetadata.Label != null &&
+                    optionMetadata.Label.LocalizedLabels.Any())
+                {
+                    // For whatever reason, the system default language did not return a name, try to get the first label available. 
+                    LocalizedLabel lblToUse = optionMetadata.Label.LocalizedLabels.FirstOrDefault();
+                    if (lblToUse != null && !string.IsNullOrEmpty(lblToUse.Label))
+                        name = lblToUse.Label;
+                }
+            }
+
+            //name = CreateValidName(name);
+            name = GetNameFromLabel(name);
+
+            if (string.IsNullOrEmpty(name))
+                name = string.Format(CultureInfo.InvariantCulture, "UnknownLabel{0}", optionMetadata.Value.Value);
+
+            _generatedNames[generatedKey] = name;
+            return name;
+        }
+
+        public string GetNameFromLabel(string label)
+        {
+            var underScoredName = Regex.Replace(label, ValidCSharpNameRegEx, "_");
+            var words = underScoredName.Split(new[] { "_" }, StringSplitOptions.RemoveEmptyEntries);
+            for (var i = 0; i < words.Length; i++)
+            {
+                var word = words[i];
+                if (string.IsNullOrWhiteSpace(word))
+                {
+                    continue;
+                }
+                words[i] = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(word.ToLower());
+            }
+            return string.Join("", words);
         }
 
         private static string AppendState(OptionMetadata option, string name)
@@ -407,6 +565,11 @@ namespace DLaB.ModelBuilderExtensions
             if (UseDisplayNameForBpfName)
             {
                 defaultName = GetBpfNameToDisplay(defaultName, entityMetadata);
+            }
+
+            if(EntityClassNameOverrides.TryGetValue(entityMetadata.LogicalName, out var overriden))
+            {
+                defaultName = overriden;
             }
 
             return CamelCaseClassNames

@@ -1,6 +1,6 @@
 ﻿using Microsoft.PowerPlatform.Dataverse.ModelBuilderLib;
-using Source.DLaB.Common;
-using Source.DLaB.Common.VersionControl;
+using DLaB.Common;
+using DLaB.Common.VersionControl;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -450,7 +450,10 @@ namespace DLaB.ModelBuilderExtensions
             }
 
             DeleteCSharpFilesInDirectory(Path.Combine(OutDirectory, EntityTypesFolder));
-            DeleteCSharpFilesInDirectory(Path.Combine(OutDirectory, MessageTypesFolder));
+            if (GenerateActions)
+            {
+                DeleteCSharpFilesInDirectory(Path.Combine(OutDirectory, MessageTypesFolder));
+            }
             DeleteCSharpFilesInDirectory(Path.Combine(OutDirectory, OptionSetTypesFolder));
         }
 
